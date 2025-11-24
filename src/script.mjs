@@ -93,16 +93,16 @@ export default {
 
       console.log(`Processing user: ${userName} in region: ${region}`);
 
-      if (!context.secrets?.AWS_ACCESS_KEY_ID || !context.secrets?.AWS_SECRET_ACCESS_KEY) {
-        throw new FatalError('Missing required AWS credentials in secrets');
+      if (!context.secrets?.BASIC_USERNAME || !context.secrets?.BASIC_PASSWORD) {
+        throw new FatalError('Missing required credentials in secrets');
       }
 
       // Create AWS IAM client
       const client = new IAMClient({
         region: region,
         credentials: {
-          accessKeyId: context.secrets.AWS_ACCESS_KEY_ID,
-          secretAccessKey: context.secrets.AWS_SECRET_ACCESS_KEY
+          accessKeyId: context.secrets.BASIC_USERNAME,
+          secretAccessKey: context.secrets.BASIC_PASSWORD
         }
       });
 
