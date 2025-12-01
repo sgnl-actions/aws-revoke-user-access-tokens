@@ -9072,6 +9072,16 @@ function validateInputs(params) {
 }
 
 var script = {
+  /**
+   * Main execution handler - revokes AWS IAM user access tokens
+   * @param {Object} params - Job input parameters
+   * @param {string} params.userName - IAM user name
+   * @param {string} params.region - AWS region
+   * @param {Object} context - Execution context with env, secrets, outputs
+   * @param {string} context.secrets.BASIC_USERNAME - AWS Access Key ID
+   * @param {string} context.secrets.BASIC_PASSWORD - AWS Secret Access Key
+   * @returns {Object} Revocation results
+   */
   invoke: async (params, context) => {
     console.log('Starting AWS Revoke User Access Tokens action');
 
@@ -9119,6 +9129,12 @@ var script = {
     }
   },
 
+  /**
+   * Error recovery handler - handles retryable errors
+   * @param {Object} params - Original params plus error information
+   * @param {Object} context - Execution context
+   * @returns {Object} Recovery results
+   */
   error: async (params, _context) => {
     const { error } = params;
     console.error(`Error handler invoked: ${error?.message}`);
@@ -9127,6 +9143,12 @@ var script = {
     throw error;
   },
 
+  /**
+   * Graceful shutdown handler - performs cleanup
+   * @param {Object} params - Original params plus halt reason
+   * @param {Object} context - Execution context
+   * @returns {Object} Cleanup results
+   */
   halt: async (params, _context) => {
     const { reason, userName } = params;
     console.log(`Job is being halted (${reason})`);
