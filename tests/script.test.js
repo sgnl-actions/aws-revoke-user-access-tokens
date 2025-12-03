@@ -6,8 +6,8 @@ describe('AWS Revoke User Access Tokens Script', () => {
       ENVIRONMENT: 'test'
     },
     secrets: {
-      AWS_ACCESS_KEY_ID: 'test-access-key',
-      AWS_SECRET_ACCESS_KEY: 'test-secret-key'
+      BASIC_USERNAME: 'test-access-key',
+      BASIC_PASSWORD: 'test-secret-key'
     },
     outputs: {}
   };
@@ -49,7 +49,7 @@ describe('AWS Revoke User Access Tokens Script', () => {
       };
 
       await expect(script.invoke(params, contextWithoutCreds))
-        .rejects.toThrow('Missing required AWS credentials in secrets');
+        .rejects.toThrow('Missing required credentials in secrets');
     });
 
     test('should validate empty userName', async () => {
