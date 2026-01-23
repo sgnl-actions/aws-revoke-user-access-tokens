@@ -1,5 +1,4 @@
 import { IAMClient, ListAccessKeysCommand, DeleteAccessKeyCommand } from '@aws-sdk/client-iam';
-import {resolveJSONPathTemplates} from '@sgnl-actions/utils';
 
 class RetryableError extends Error {
   constructor(message) {
@@ -97,18 +96,10 @@ export default {
   invoke: async (params, context) => {
     console.log('Starting AWS Revoke User Access Tokens action');
 
-    const jobContext = context.data || {};
-
-    // Resolve JSONPath templates in params
-    const { result: resolvedParams, errors } = resolveJSONPathTemplates(params, jobContext);
-    if (errors.length > 0) {
-      console.warn('Template resolution errors:', errors);
-    }
-
     try {
-      validateInputs(resolvedParams);
+      validateInputs(params);
 
-      const { userName, region } = resolvedParams;
+      const { userName, region } = params;
 
       console.log(`Processing user: ${userName} in region: ${region}`);
 
