@@ -27,7 +27,7 @@
   "dependencies": {
     "@aws-sdk/client-iam": "^3.864.0",
     "@rollup/plugin-json": "^6.1.0",
-    "@sgnl-actions/utils": "github:sgnl-actions/utils#v1.0.6"
+    "@sgnl-actions/utils": "github:sgnl-actions/utils#v1.0.8"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^6.1.0",
