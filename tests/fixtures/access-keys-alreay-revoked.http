@@ -1,0 +1,17 @@
+HTTP/1.1 200 OK
+connection: close
+content-length: 321
+content-type: text/xml
+date: Mon, 02 Mar 2026 21:18:02 GMT
+x-amzn-requestid: 43cbd669-18de-4bd9-8700-fc2122452b1b
+
+<ListAccessKeysResponse xmlns="https://iam.amazonaws.com/doc/2010-05-08/">
+  <ListAccessKeysResult>
+    <IsTruncated>false</IsTruncated>
+    <AccessKeyMetadata/>
+  </ListAccessKeysResult>
+  <ResponseMetadata>
+    <RequestId>43cbd669-18de-4bd9-8700-fc2122452b1b</RequestId>
+  </ResponseMetadata>
+</ListAccessKeysResponse>
+
