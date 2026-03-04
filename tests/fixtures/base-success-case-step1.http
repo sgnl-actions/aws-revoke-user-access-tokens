@@ -1,0 +1,24 @@
+HTTP/1.1 200 OK
+connection: close
+content-length: 559
+content-type: text/xml
+date: Mon, 02 Mar 2026 21:17:17 GMT
+x-amzn-requestid: 5288391d-4030-4682-886c-e32fd22c26a6
+
+<ListAccessKeysResponse xmlns="https://iam.amazonaws.com/doc/2010-05-08/">
+  <ListAccessKeysResult>
+    <IsTruncated>false</IsTruncated>
+    <AccessKeyMetadata>
+      <member>
+        <AccessKeyId>YOIU0I3WQGGND3YIOE4X</AccessKeyId>
+        <UserName>test-user-1</UserName>
+        <Status>Active</Status>
+        <CreateDate>2026-03-02T21:16:15Z</CreateDate>
+      </member>
+    </AccessKeyMetadata>
+  </ListAccessKeysResult>
+  <ResponseMetadata>
+    <RequestId>5288391d-4030-4682-886c-e32fd22c26a6</RequestId>
+  </ResponseMetadata>
+</ListAccessKeysResponse>
+

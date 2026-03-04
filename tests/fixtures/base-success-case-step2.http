@@ -1,0 +1,13 @@
+HTTP/1.1 200 OK
+connection: close
+content-length: 210
+content-type: text/xml
+date: Mon, 02 Mar 2026 21:17:17 GMT
+x-amzn-requestid: 65f54137-cecd-4b69-81b5-87423a461ce8
+
+<DeleteAccessKeyResponse xmlns="https://iam.amazonaws.com/doc/2010-05-08/">
+  <ResponseMetadata>
+    <RequestId>65f54137-cecd-4b69-81b5-87423a461ce8</RequestId>
+  </ResponseMetadata>
+</DeleteAccessKeyResponse>
+
