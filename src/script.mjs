@@ -1,4 +1,5 @@
 import { IAMClient, ListAccessKeysCommand, DeleteAccessKeyCommand } from '@aws-sdk/client-iam';
+import { getAwsCredentials } from "./auth.mjs"
 
 class RetryableError extends Error {
   constructor(message) {
@@ -14,6 +15,12 @@ class FatalError extends Error {
   }
 }
 
+/**
+ * Delete all IAM access keys for a given user.
+ * @param {IAMClient} client - Configured AWS IAM client instance.
+ * @param {string} userName - IAM user name whose keys should be revoked.
+ * @returns {Promise<number>} Total number of keys deleted.
+ */
 async function deleteAllAccessKeys(client, userName) {
   let keysDeleted = 0;
   let marker = undefined;
@@ -82,6 +89,61 @@ function validateInputs(params) {
   }
 }
 
+function hasBasicAuth(context) {
+  return Boolean(context.secrets?.BASIC_USERNAME && context.secrets?.BASIC_PASSWORD);
+}
+
+function hasOAuth2ClientCredentials(context) {
+  return Boolean(
+      context.environment?.OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID &&
+      context.environment?.OAUTH2_CLIENT_CREDENTIALS_TOKEN_URL &&
+      context.secrets?.OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET
+  );
+}
+
+function hasAwsAssumeRoleWebIdentityConfig(context) {
+  return Boolean(
+    context.environment?.AWS_ASSUME_ROLE_WEB_IDENTITY_REGION &&
+    context.environment?.AWS_ASSUME_ROLE_WEB_IDENTITY_ROLE_ARN
+  );
+}
+
+function buildAwsCredentialsParams(context) {
+  if (hasBasicAuth(context)) {
+    return {
+      basic: {
+        username:  context.secrets.BASIC_USERNAME,
+        password: context.secrets.BASIC_PASSWORD
+      },
+    }
+  }
+
+  if (hasOAuth2ClientCredentials(context)) {
+    if (!hasAwsAssumeRoleWebIdentityConfig(context)) {
+      throw new FatalError("OAuth2ClientCredentials missing required AwsAssumeRoleWebIdentity configuration")
+    }
+
+    return {
+      clientCredentials: {
+        clientId: context.environment.OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID,
+        clientSecret: context.secrets.OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET,
+        tokenUrl: context.environment.OAUTH2_CLIENT_CREDENTIALS_TOKEN_URL,
+        scope: context.environment.OAUTH2_CLIENT_CREDENTIALS_SCOPE,
+        audience: context.environment.OAUTH2_CLIENT_CREDENTIALS_AUDIENCE,
+        authStyle: context.environment.OAUTH2_CLIENT_CREDENTIALS_AUTH_STYLE,
+        awsConfig: {
+          region: context.environment.AWS_ASSUME_ROLE_WEB_IDENTITY_REGION,
+          roleArn: context.environment.AWS_ASSUME_ROLE_WEB_IDENTITY_ROLE_ARN,
+          sessionName: context.environment.AWS_ASSUME_ROLE_WEB_IDENTITY_SESSION_NAME || `sgnl-action-${crypto.randomUUID()}`,
+          sessionDuration: context.environment.AWS_ASSUME_ROLE_WEB_IDENTITY_SESSION_DURATION_SECONDS
+        }
+      }
+    }
+  }
+
+  throw new FatalError('unsupported auth type: expected Basic or OAuth2ClientCredentials with AwsAssumeRoleWebIdentity');
+}
+
 export default {
   /**
    * Main execution handler - revokes AWS IAM user access tokens
@@ -103,17 +165,12 @@ export default {
 
       console.log(`Processing user: ${userName} in region: ${region}`);
 
-      if (!context.secrets?.BASIC_USERNAME || !context.secrets?.BASIC_PASSWORD) {
-        throw new FatalError('Missing required credentials in secrets');
-      }
+      const awsCredentailsParams = buildAwsCredentialsParams(context)
 
       // Create AWS IAM client
       const client = new IAMClient({
         region: region,
-        credentials: {
-          accessKeyId: context.secrets.BASIC_USERNAME,
-          secretAccessKey: context.secrets.BASIC_PASSWORD
-        }
+        credentials: await getAwsCredentials(awsCredentailsParams)
       });
 
       // Delete all access keys for the user
