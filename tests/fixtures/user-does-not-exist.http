@@ -1,0 +1,16 @@
+HTTP/1.1 404 Not Found
+connection: close
+content-length: 291
+content-type: text/xml
+date: Mon, 02 Mar 2026 21:22:04 GMT
+x-amzn-requestid: 42b246bb-4f05-4198-8b81-43689a4a6816
+
+<ErrorResponse xmlns="https://iam.amazonaws.com/doc/2010-05-08/">
+  <Error>
+    <Type>Sender</Type>
+    <Code>NoSuchEntity</Code>
+    <Message>The user with name test-user-2 cannot be found.</Message>
+  </Error>
+  <RequestId>42b246bb-4f05-4198-8b81-43689a4a6816</RequestId>
+</ErrorResponse>
+
