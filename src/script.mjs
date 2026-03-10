@@ -1,5 +1,6 @@
 import { IAMClient, ListAccessKeysCommand, DeleteAccessKeyCommand } from '@aws-sdk/client-iam';
-import { getAwsCredentials } from "./auth.mjs"
+import { getAwsCredentials } from './auth.mjs';
+import { randomUUID } from 'node:crypto';
 
 class RetryableError extends Error {
   constructor(message) {
@@ -39,10 +40,10 @@ async function deleteAllAccessKeys(client, userName) {
       if (error.name === 'NoSuchEntityException') {
         throw new FatalError(`User not found: ${userName}`);
       }
-      if (error.name === 'UnauthorizedException' || error.name === 'AccessDeniedException') {
+      if (error.name === 'UnauthorizedException' || error.name === 'AccessDeniedException' || error.name === 'AccessDenied') {
         throw new FatalError(`Access denied: ${error.message}`);
       }
-      if (error.name === 'ThrottlingException' || error.name === 'ServiceUnavailableException') {
+      if (error.name === 'ThrottlingException' || error.name === 'ServiceUnavailableException' || error.name === 'Throttling') {
         throw new RetryableError(`AWS service temporarily unavailable: ${error.message}`);
       }
       throw new FatalError(`Failed to list access keys: ${error.message}`);
@@ -95,7 +96,7 @@ function hasBasicAuth(context) {
 
 function hasOAuth2ClientCredentials(context) {
   return Boolean(
-      context.environment?.OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID &&
+    context.environment?.OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID &&
       context.environment?.OAUTH2_CLIENT_CREDENTIALS_TOKEN_URL &&
       context.secrets?.OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET
   );
@@ -114,13 +115,13 @@ function buildAwsCredentialsParams(context) {
       basic: {
         username:  context.secrets.BASIC_USERNAME,
         password: context.secrets.BASIC_PASSWORD
-      },
-    }
+      }
+    };
   }
 
   if (hasOAuth2ClientCredentials(context)) {
     if (!hasAwsAssumeRoleWebIdentityConfig(context)) {
-      throw new FatalError("OAuth2ClientCredentials missing required AwsAssumeRoleWebIdentity configuration")
+      throw new FatalError('OAuth2ClientCredentials missing required AwsAssumeRoleWebIdentity configuration');
     }
 
     return {
@@ -134,11 +135,11 @@ function buildAwsCredentialsParams(context) {
         awsConfig: {
           region: context.environment.AWS_ASSUME_ROLE_WEB_IDENTITY_REGION,
           roleArn: context.environment.AWS_ASSUME_ROLE_WEB_IDENTITY_ROLE_ARN,
-          sessionName: context.environment.AWS_ASSUME_ROLE_WEB_IDENTITY_SESSION_NAME || `sgnl-action-${crypto.randomUUID()}`,
+          sessionName: context.environment.AWS_ASSUME_ROLE_WEB_IDENTITY_SESSION_NAME || `sgnl-action-${randomUUID()}`,
           sessionDuration: context.environment.AWS_ASSUME_ROLE_WEB_IDENTITY_SESSION_DURATION_SECONDS
         }
       }
-    }
+    };
   }
 
   throw new FatalError('unsupported auth type: expected Basic or OAuth2ClientCredentials with AwsAssumeRoleWebIdentity');
@@ -165,7 +166,7 @@ export default {
 
       console.log(`Processing user: ${userName} in region: ${region}`);
 
-      const awsCredentailsParams = buildAwsCredentialsParams(context)
+      const awsCredentailsParams = buildAwsCredentialsParams(context);
 
       // Create AWS IAM client
       const client = new IAMClient({
@@ -176,15 +177,13 @@ export default {
       // Delete all access keys for the user
       const keysDeleted = await deleteAllAccessKeys(client, userName);
 
-      const result = {
+      console.log(`Successfully revoked ${keysDeleted} access keys for user: ${userName}`);
+      return {
         userName,
         keysDeleted,
         revoked: true,
         revokedAt: new Date().toISOString()
       };
-
-      console.log(`Successfully revoked ${keysDeleted} access keys for user: ${userName}`);
-      return result;
 
     } catch (error) {
       console.error(`Error revoking user access tokens: ${error.message}`);
