@@ -28,35 +28,31 @@ export async function getAwsCredentials(params) {
 
 async function getWebIdentityCredentialsProvider(clientCredentials) {
     const { tokenUrl, clientId, clientSecret, scope, awsConfig, audience, authStyle } = clientCredentials;
-    const { roleArn, sessionName, sessionDurationSeconds, region } = awsConfig
+    const { roleArn, sessionName, sessionDuration, region } = awsConfig
 
         const webIdentityToken = await getClientCredentialsToken({tokenUrl, clientId, clientSecret, scope, audience, authStyle});
 
         const stsClient = new STSClient({region})
 
-        const assumeRoleParams = {
+        const resp = await stsClient.send(new AssumeRoleWithWebIdentityCommand({
             RoleArn: roleArn,
             RoleSessionName: sessionName,
-            DurationSeconds: parseSessionDurationSeconds(sessionDurationSeconds) || 3600,
+            DurationSeconds: parseSessionDurationSeconds(sessionDuration) || 3600,
             WebIdentityToken: webIdentityToken
+        }));
+
+        if (!resp.Credentials) {
+            throw new Error('Failed to assume AWS role with web identity');
+        }
+
+        const c = resp.Credentials;
+
+        return {
+            accessKeyId: c.AccessKeyId,
+            secretAccessKey: c.SecretAccessKey,
+            sessionToken: c.SessionToken,
+            expiration: c.Expiration
         };
-
-        return async () => {
-            const resp = await stsClient.send(new AssumeRoleWithWebIdentityCommand(assumeRoleParams));
-
-            if (!resp.Credentials) {
-                throw new Error('Failed to assume AWS role with web identity');
-            }
-
-            const c = resp.Credentials;
-
-            return {
-                accessKeyId: c.AccessKeyId,
-                secretAccessKey: c.SecretAccessKey,
-                sessionToken: c.SessionToken,
-                expiration: c.Expiration
-            };
-    };
 }
    
 function parseSessionDurationSeconds(durationRaw) {
