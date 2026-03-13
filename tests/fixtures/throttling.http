@@ -1,0 +1,15 @@
+HTTP/1.1 400 Bad Request
+connection: close
+content-type: text/xml
+date: Mon, 02 Mar 2026 21:23:26 GMT
+x-amzn-requestid: 7eab920b-faf6-4b2a-8dae-27215843f5fc
+
+<ErrorResponse xmlns="https://iam.amazonaws.com/doc/2010-05-08/">
+  <Error>
+    <Type>Sender</Type>
+    <Code>Throttling</Code>
+    <Message>Rate exceeded</Message>
+  </Error>
+  <RequestId>7eab920b-faf6-4b2a-8dae-27215843f5fc</RequestId>
+</ErrorResponse>
+

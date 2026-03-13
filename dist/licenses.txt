@@ -608,6 +608,7 @@ Apache License
 The following npm packages may be included in this product:
 
  - @aws-sdk/client-iam@3.1001.0
+ - @aws-sdk/client-sts@3.1001.0
  - @aws-sdk/util-user-agent-browser@3.972.6
  - @aws-sdk/util-user-agent-node@3.973.1
  - @smithy/middleware-retry@4.4.38
